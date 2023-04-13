@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div>
+      <form action="" id="user-name-form">
+        <label for="">Enter your name</label>
+        <input type="text" name="userName" placeholder="Your name" required />
+      </form>
+    </div>
+    <div id="chat" class="chat"></div>
+
+    <div id="chat-message">
+      <form action="" id="chat-form">
+        <div class="form-group">
+          <textarea
+            name="message"
+            id=""
+            cols="30"
+            rows="3"
+            placeholder="New message"
+            required
+          ></textarea>
+        </div>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <script>
+      const socket = new WebSocket('ws://localhost:5001');
+
+      socket.onopen = () => console.log('Connection open');
+      socket.onmessage = event => {
+        const parsedData = JSON.parse(event.data);
+
+        chat.insertAdjacentHTML(
+          'beforeend',
+          `<p>
+             <span class="name">${parsedData.name}:</span>
+             <span class="user-chat-message">${parsedData.message}</span>
+            </p>`
+        );
+      };
+
+      let userName = '';
+      const chat = document.getElementById('chat');
+
+      const userNameForm = document.getElementById('user-name-form');
+      userNameForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        userName = this.elements.userName.value;
+        this.remove();
+      });
+
+      const chatForm = document.getElementById('chat-form');
+      chatForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (!userName) {
+          this.reset();
+          return;
+        }
+
+        const message = this.elements.message.value;
+
+        chat.insertAdjacentHTML(
+          'beforeend',
+          `<p>
+             <span class="name">${userName}:</span>
+             <span class="your-chat-message">${message}</span>
+            </p>`
+        );
+
+        this.reset();
+
+        const data = {
+          name: userName,
+          message,
+        };
+
+        socket.send(JSON.stringify(data));
+      });
+    </script>
+  </body>
+</html>
